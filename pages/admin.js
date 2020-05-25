@@ -13,8 +13,8 @@ import { Menu } from 'semantic-ui-react';
 
 // import Gamble from '../build/contracts/Gamble.json';
 
-class Home extends Component {
-	state = { amount: 0, data: null, search: '', activeItem: 'All', filteredData: null, admin: false };
+class AdminPage extends Component {
+	state = { amount: 0, data: null, search: '', activeItem: 'All', filteredData: null, admin: true };
 	// static async getInitialProps(props) {
 	// 	let accounts = await web3.eth.getAccounts();
 	// 	let response;
@@ -28,24 +28,7 @@ class Home extends Component {
 	componentDidMount = async () => {
 		// const accounts = await web3.eth.getAccounts();
 		const { data } = await axios.get('/api/test');
-		const gambles = await GambleFactory.methods.getDeployedGambles().call();
-		let gambleIDs = [];
-		for (let i = 0; i < gambles.length; i++) {
-			let gamble = Gamble(gambles[i]);
-			let id = await gamble.methods.gameId().call();
-			gambleIDs.push(id);
-		}
-		let index = 0;
-		//gotta change this to hashmap
-
-		let filteredData = data.filter((e, i) => {
-			if (e.id == gambleIDs[index]) {
-				index++;
-				return true;
-			}
-		});
-		console.log(filteredData);
-		this.setState({ data: filteredData, filteredData, gambles, gambleIDs });
+		this.setState({ data, filteredData: data });
 	};
 
 	handleItemClick = (e, { name }) => {
@@ -74,11 +57,21 @@ class Home extends Component {
 		this.setState({ activeItem: name, filteredData });
 	};
 
+	handleChange = async (e) => {
+		this.setState({ search: e.target.value });
+	};
+
+	handlePressKey = async (e) => {
+		if (e.key === 'Enter') {
+			const { data } = await axios.get(`/api/test?search[name]=${this.state.search}`);
+			this.setState({ data });
+		}
+	};
 	renderMatches = () => {
-		const { filteredData, gambles } = this.state;
-		if (filteredData != undefined) {
+		const { data, filteredData } = this.state;
+		if (data != undefined) {
 			const matches = filteredData.map((match, i) => (
-				<MatchCard key={i} match={match} admin={this.state.admin} address={gambles[i]} />
+				<MatchCard key={i} match={match} admin={this.state.admin} />
 			));
 			return matches;
 		} else {
@@ -131,4 +124,4 @@ class Home extends Component {
 	}
 }
 
-export default Home;
+export default AdminPage;
